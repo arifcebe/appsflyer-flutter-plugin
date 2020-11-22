@@ -1,8 +1,6 @@
 package com.appsflyer.appsflyersdk;
 
-import android.app.Activity;
 import android.app.Application;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
@@ -14,7 +12,6 @@ import com.appsflyer.AppsFlyerConversionListener;
 import com.appsflyer.AppsFlyerInAppPurchaseValidatorListener;
 import com.appsflyer.AppsFlyerLib;
 import com.appsflyer.AppsFlyerProperties;
-import com.appsflyer.AppsFlyerTrackingRequestListener;
 import com.appsflyer.CreateOneLinkHttpTask;
 import com.appsflyer.share.CrossPromotionHelper;
 import com.appsflyer.share.LinkGenerator;
@@ -23,7 +20,6 @@ import com.appsflyer.share.ShareInviteHelper;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -39,9 +35,6 @@ import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
-import io.flutter.plugin.common.PluginRegistry;
-import io.flutter.plugin.common.PluginRegistry.Registrar;
-import io.flutter.view.FlutterView;
 
 import static com.appsflyer.appsflyersdk.AppsFlyerConstants.AF_EVENTS_CHANNEL;
 import static com.appsflyer.appsflyersdk.AppsFlyerConstants.AF_FAILURE;
@@ -214,7 +207,7 @@ public class AppsflyerSdkPlugin implements MethodCallHandler, FlutterPlugin, Act
         Map data = (Map)call.argument("params");
 
         if (appId != null && !appId.equals("")) {
-            CrossPromotionHelper.trackAndOpenStore(mContext, appId, campaign, data);
+            CrossPromotionHelper.logAndOpenStore(mContext, appId, campaign, data);
         }
         result.success(null);
     }
@@ -225,7 +218,7 @@ public class AppsflyerSdkPlugin implements MethodCallHandler, FlutterPlugin, Act
         Map data = (Map)call.argument("data");
 
         if (appId != null && !appId.equals("")) {
-            CrossPromotionHelper.trackCrossPromoteImpression(mContext, appId, campaign, data);
+            CrossPromotionHelper.logCrossPromoteImpression(mContext, appId, campaign, data);
         }
         result.success(null);
     }
@@ -342,8 +335,8 @@ public class AppsflyerSdkPlugin implements MethodCallHandler, FlutterPlugin, Act
         String price = (String) call.argument("price");
         String currency = (String) call.argument("currency");
         Map<String, String> additionalParameters = (Map<String, String>) call.argument("additionalParameters");
-        AppsFlyerLib.getInstance().validateAndTrackInAppPurchase(mContext, publicKey, signature, purchaseData, price,
-                currency, additionalParameters);
+        AppsFlyerLib.getInstance().validateAndLogInAppPurchase(mContext, publicKey, signature, purchaseData,
+                price, currency, additionalParameters);
         result.success(null);
     }
 
@@ -461,7 +454,7 @@ public class AppsflyerSdkPlugin implements MethodCallHandler, FlutterPlugin, Act
 
     private void stop(MethodCall call, Result result) {
         boolean isStopped = (boolean) call.argument("isStopped");
-        AppsFlyerLib.getInstance().stopTracking(isStopped, mContext);
+        AppsFlyerLib.getInstance().stop(isStopped, mContext);
         result.success(null);
     }
 
@@ -488,9 +481,9 @@ public class AppsflyerSdkPlugin implements MethodCallHandler, FlutterPlugin, Act
         AppsFlyerConversionListener gcdListener = null;
         AppsFlyerLib instance = AppsFlyerLib.getInstance();
 
-        if (mIntent.getData() != null) {
-            instance.setPluginDeepLinkData(mIntent);
-        }
+//        if (mIntent.getData() != null) {
+//            instance.setPluginDeepLinkData(mIntent);
+//        }
 
         String afDevKey = (String) call.argument(AppsFlyerConstants.AF_DEV_KEY);
         if (afDevKey == null || afDevKey.equals("")) {
@@ -518,8 +511,11 @@ public class AppsflyerSdkPlugin implements MethodCallHandler, FlutterPlugin, Act
             instance.setAppInviteOneLink(appInviteOneLink);
         }
 
-        instance.trackEvent(mContext, null, null);
-        instance.startTracking(mApplication, afDevKey);
+//        instance.trackEvent(mContext, null, null);
+//        instance.startTracking(mApplication, afDevKey);
+        
+        instance.logEvent(mContext, null, null);
+        instance.start(mApplication, afDevKey);
 
         result.success("success");
     }
@@ -532,7 +528,7 @@ public class AppsflyerSdkPlugin implements MethodCallHandler, FlutterPlugin, Act
         final Map<String, Object> eventValues = call.argument(AppsFlyerConstants.AF_EVENT_VALUES);
 
         // Send event data through appsflyer sdk
-        instance.trackEvent(mContext, eventName, eventValues);
+        instance.logEvent(mContext, eventName, eventValues);
 
         result.success(true);
     }
